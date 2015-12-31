@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+	{% if title %}
+	<title>Consamables - {{ title }}</title>
+	{% else %}
+	<title>Consamables</title>
+	{% endif %} 
+</head>
+
+<body>
+	{% block content %}{% endblock %}
+</body>
+</html>

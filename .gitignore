@@ -1,0 +1,4 @@
+constants.py
+app_config.py
+open_db.sh
+*.pyc

@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+
+{% set title = "Order Page" %}
+
+{% block content %}
+<div>Ordering from {{ food }} in {{ time }}</div>
+<br>
+<form action="" method="post" name="order">
+	<div class="form-group">
+		{{ form.csrf_token }}
+		<div>
+			Email:<br>
+			{{ form.email }}@students.olin.edu
+		</div>
+		<br>
+		<div> 
+			{% for subfield in form.item %}
+				<tr>
+					<td>{{ subfield }}</td>
+					<td>{{ subfield.label }}</td>
+				</tr><br>
+			{% endfor %}
+		</div>
+		<div>{{ form.otherfield }}</div><br>
+		<div>
+			Toppings:<br>
+			{{ form.topping1 }}
+		</div>
+		<div>{{ form.topping2 }}</div>
+		<div>{{ form.topping3 }}</div>
+		<br>
+		<div>
+			Location:<br>
+			{{ form.location }}
+		</div>
+		<br>
+		<input type="submit" value="Continue">
+	</div>
+</form>
+{% endblock %}
