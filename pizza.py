@@ -3,9 +3,10 @@ import requests
 from application import app, db
 from application.forms import OrderForm
 from application.models import Config, Half
+from application.constants import CONSUMER_ID, CONSUMER_SECRET, APP_SECRET
 
 app.debug = True
-app.secret_key = 'S0&0qGLsc0=by#6Aa#Pjk6:Z.:Z=|6'
+app.secret_key = APP_SECRET
 
 @app.route("/") 
 def homepage():
