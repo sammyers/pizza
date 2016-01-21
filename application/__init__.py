@@ -1,8 +1,18 @@
-from flask import Flask
+from factory import create_app
 from flask.ext.sqlalchemy import SQLAlchemy
 
-app = Flask(__name__)
-db = SQLAlchemy(app)
-app.config.from_pyfile('app_config.py')
+app = create_app()
 
-from application import models
+app.template_folder = 'application/templates'
+app.static_folder = 'application/static'
+
+class UnLockedAlchemy(SQLAlchemy):
+    def apply_driver_hacks(self, app, info, options):
+        if not "isolation_level" in options:
+            options["isolation_level"] = "READ COMMITTED" 
+        return super(UnLockedAlchemy, self).apply_driver_hacks(app, info, options)
+
+db = UnLockedAlchemy(app)
+
+import tasks
+from models import *

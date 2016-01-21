@@ -1,4 +1,4 @@
-from application import db
+from __init__ import db
 
 class Half(db.Model):
     __tablename__ = 'halves'
@@ -20,16 +20,32 @@ class Half(db.Model):
 #     id = db.Column(db.Integer, primary_key=True, index=True)
 
 
-# class Person(db.Model):
-#     __tablename__ = 'people'
+class Pizza(db.Model):
+    __tablename__ = 'pizzas'
     
-#     id = db.Column(db.Integer, primary_key=True, index=True)
+    id = db.Column(db.Integer, primary_key=True, index=True)
+    topping1_left = db.Column(db.String(25))
+    topping2_left = db.Column(db.String(25))
+    topping3_left = db.Column(db.String(25))
+    topping1_right = db.Column(db.String(25))
+    topping2_right = db.Column(db.String(25))
+    topping3_right = db.Column(db.String(25))
+    sauce = db.Column(db.String(25))
+    size = db.Column(db.String(10))
+
+    person1_id = db.Column(db.Integer, db.ForeignKey('people.id'))
+    person2_id = db.Column(db.Integer, db.ForeignKey('people.id'))
+
+    person1 = db.relationship('Person', foreign_keys=[person1_id])
+    person2 = db.relationship('Person', foreign_keys=[person2_id])
 
 
-# class Pizza(db.Model):
-#     __tablename__ = 'pizzas'
-    
-#     id = db.Column(db.Integer, primary_key=True, index=True)
+class Person(db.Model):
+    __tablename__ = 'people'
+
+    id = db.Column(db.Integer, primary_key=True, index=True)
+    email = db.Column(db.String(50))
+    location = db.Column(db.String(10))
 
 
 class Topping(db.Model):
@@ -43,8 +59,23 @@ class Config(db.Model):
     __tablename__ = 'config'
 
     id = db.Column(db.Integer, primary_key=True, index=True)
-    setting = db.Column(db.String(20), unique=True)
-    value = db.Column(db.String(20))
+    state = db.Column(db.String(20))
+    food = db.Column(db.String(25))
+    deadline = db.Column(db.DateTime)
+    arrivalmin = db.Column(db.Integer)
+    arrivalmax = db.Column(db.Integer)
+    timer_id = db.Column(db.String(50))
+
+    def __init__(self, state, food, deadline, arrivalmin, arrivalmax):
+        self.state = state
+        self.food = food
+        self.deadline = deadline
+        self.arrivalmin = arrivalmin
+        self.arrivalmax = arrivalmax
 
     def __repr__(self):
-        return "<{} set to {}>".format(self.setting, self.value)
+        return "<state: {}, food: {}, deadline: {}, arriving in {} to {} minutes>".format(self.state, 
+                                                                                          self.food, 
+                                                                                          self.deadline, 
+                                                                                          self.arrivalmin,
+                                                                                          self.arrivalmax)

@@ -1,60 +1,218 @@
-from flask import Flask, flash, redirect, render_template, request, session
-import requests
 from application import app, db
-from application.forms import OrderForm
-from application.models import Config, Half
-from application.constants import CONSUMER_ID, CONSUMER_SECRET, APP_SECRET
+from flask import redirect, render_template, request, session, jsonify
+import requests, datetime, threading, decimal, math
+from application.models import Config, Half, Pizza, Person
+from application.forms import OrderForm, AdminPanel
+from application.constants import CONSUMER_ID, CONSUMER_SECRET 
+from application.constants import VENMO_ADMIN, VENMO_NOTE
+from application.constants import LARGE_PRICE, MEDIUM_PRICE
+from application.constants import EMAIL_DOMAIN
+from application.tasks import close_order
+from celery.task.control import revoke
 
-app.debug = True
-app.secret_key = APP_SECRET
 
-@app.route("/") 
+@app.route("/")
 def homepage():
-	homepage_state = Config.query.filter_by(setting='homepage state').first().value
+	data = db.session.query(Config).first()
+	return render_template('homepage.html', data=data)
 
-	if homepage_state == 'ordering':
-		food = Config.query.filter_by(setting='food').first().value
-		time = Config.query.filter_by(setting='order time').first().value
-		return render_template('homepage_ordering.html', food=food, time=time)
-	elif homepage_state == 'ordered':
-		arriving = Config.query.filter_by(setting='arrival time').first().value
-		return render_template('homepage_ordered.html', arriving=arriving)
-	else:
-		return render_template('homepage.html')
 
 @app.route("/order", methods=['GET', 'POST'])
 def order():
-	time = Config.query.filter_by(setting='order time').first().value
-	food = Config.query.filter_by(setting='food').first().value
+	data = db.session.query(Config).first()
+	if data.state != 'ordering':
+		return redirect("/")
 	form = OrderForm(request.form)
 	if request.method == 'POST' and form.validate():
-		order = Half()
-		order.email = form.email.data + '@students.olin.edu'
-		order.location = form.location.data
-		order.topping1 = form.topping1.data
-		order.topping2 = form.topping2.data
-		order.topping3 = form.topping3.data
+		if form.item.data == 'half':
+			order = Half()
+			order.email = form.email.data + EMAIL_DOMAIN
+			order.location = form.location.data
+			order.topping1 = form.topping1.data
+			order.topping2 = form.topping2.data
+			order.topping3 = form.topping3.data
+			session['payment_amount'] = LARGE_PRICE / 2
+		elif form.item.data == 'whole':
+			order = Pizza()
+			person = Person()
+			order.topping1_left = form.topping1.data
+			order.topping2_left = form.topping2.data
+			order.topping3_left = form.topping3.data
+			order.topping1_right = form.topping4.data
+			order.topping2_right = form.topping5.data
+			order.topping3_right = form.topping6.data
+			order.size = 'large'
+			person.email = form.email.data + EMAIL_DOMAIN
+			person.location = form.location.data
+			order.person1 = person
+			db.session.add(person)
+			session['payment_amount'] = LARGE_PRICE
+		elif form.item.data == 'medium':
+			order = Pizza()
+			person = Person()
+			order.topping1_left = form.topping1.data
+			order.topping2_left = form.topping2.data
+			order.topping1_right = form.topping4.data
+			order.topping2_right = form.topping5.data
+			order.size = 'medium'
+			person.email = form.email.data + EMAIL_DOMAIN
+			person.location = form.location.data
+			order.person1 = person
+			db.session.add(person)
+			session['payment_amount'] = MEDIUM_PRICE
 		db.session.add(order)
-		db.session.commit()
-		return redirect('/pay')
-	return render_template('order.html', time=time, food=food, form=form)
+		url = 'https://api.venmo.com/v1/oauth/authorize?client_id={}&scope=make_payments&response_type=code'.format(CONSUMER_ID)
+		return redirect(url)
+	return render_template('order.html', data=data, form=form, domain=EMAIL_DOMAIN)
 
-@app.route("/pay", methods=['GET','POST'])
-def pay():
-	# form = PaymentForm(request.form)
-	return render_template('payment.html')
 
 @app.route("/request", methods=['GET','POST'])
 def request_food():
 	return render_template('request.html')
 
+
 @app.route("/done")
 def done():
 	return render_template('done.html')
 
-@app.route("/admin")
+
+@app.route("/oauth-authorized")
+def oauth_authorized():
+	if request.args.get('error'):
+		return redirect("/order")
+	AUTHORIZATION_CODE = request.args.get('code')
+	data = {
+		"client_id":CONSUMER_ID,
+		"client_secret":CONSUMER_SECRET,
+		"code":AUTHORIZATION_CODE,
+	}
+	url = 'https://api.venmo.com/v1/oauth/access_token'
+	response = requests.post(url, data)
+	response_dict = response.json()
+	access_token = response_dict.get('access_token')
+	user = response_dict.get('user')
+
+	session['venmo_token'] = access_token
+	session['venmo_username'] = user['username']
+
+	return redirect("/pay")
+
+
+@app.route("/pay")
+def pay():
+	if session.get('venmo_token'):
+		config = db.session.query(Config).first()
+		remaining = config.deadline - datetime.datetime.now()
+		data = {
+			"username":session['venmo_username'],
+			"access_token":session['venmo_token'],
+			"amount":session['payment_amount'],
+			"eta":"{} to {} minutes".format(
+				(remaining.seconds / 60 + config.arrivalmin),
+				(remaining.seconds / 60 + config.arrivalmax)
+				)
+		}
+		return render_template('pay.html', data=data)
+	else:
+		return redirect("/")
+
+
+@app.route("/make_payment", methods=['POST'])
+def make_payment():
+	access_token = session['venmo_token']
+	note = VENMO_NOTE
+	username = VENMO_ADMIN
+	amount = session['payment_amount']
+
+	payload = {
+		"access_token":access_token,
+		"username":username,
+		"note":note,
+		"amount":amount
+	}
+
+	url = "https://api.venmo.com/v1/payments"
+	response = requests.post(url, payload)
+	data = response.json()
+	session.clear()
+	return jsonify(data)
+
+
+@app.route("/check_status", methods=['GET', 'POST'])
+def check_status():
+	config = db.session.query(Config).first()
+	# if request.method == 'POST':
+		
+	data = {
+		"state":config.state,
+		"deadline":config.deadline,
+		"arrivalmin":config.arrivalmin,
+		"arrivalmax":config.arrivalmax
+	}
+	return jsonify(data)
+
+
+@app.route("/admin", methods=['GET','POST'])
 def admin():
-	return render_template('admin.html')
+	data = db.session.query(Config).first()
+	panel = AdminPanel(request.form)
+	if request.method == 'POST':
+		config = db.session.query(Config).first()
+		if panel.start.data and config.state == 'not ordering':
+			config.state = 'ordering'
+			duration = datetime.timedelta(minutes=int(panel.deadline.data))
+			config.deadline = datetime.datetime.now() + duration
+			config.arrivalmin = 25
+			config.arrivalmax = 35
+			timer = close_order.apply_async(countdown=duration.seconds)
+			config.timer_id = timer.task_id
+
+		elif panel.close.data and config.state == 'ordering' and int(panel.arrivalmin.data) < int(panel.arrivalmax.data):
+			config.state = 'ordered'
+			config.deadline = datetime.datetime.now()
+			config.arrivalmin = panel.arrivalmin.data
+			config.arrivalmax = panel.arrivalmax.data
+			revoke(config.timer_id)
+			config.timer_id = None
+
+		elif panel.arrived.data and config.state == 'ordered':
+			config.state = 'not ordering'
+			config.arrivalmin = 0
+			config.arrivalmax = 0
+
+		elif panel.cancel.data and config.state == 'ordering':
+			config.state = 'not ordering'
+			config.deadline = datetime.datetime.now()
+			config.arrivalmin = 0
+			config.arrivalmax = 0
+			revoke(config.timer_id)
+			config.timer_id = None
+
+		elif panel.addtime.data and config.state == 'ordering':
+			config.deadline = config.deadline + datetime.timedelta(minutes=int(panel.deadline_add.data))
+			duration = config.deadline - datetime.datetime.now()
+			revoke(config.timer_id)
+			timer = close_order.apply_async(countdown=duration.seconds)
+			config.timer_id = timer.task_id
+
+		elif panel.settime.data and config.state == 'ordering':
+			config.arrivalmin = panel.arrivalmin.data
+			config.arrivalmax = panel.arrivalmax.data
+
+		elif panel.updatetime.data and config.state == 'ordered' and int(panel.arrivalmin.data) < int(panel.arrivalmax.data):
+			finalmin = config.deadline + datetime.timedelta(minutes=config.arrivalmin)
+			finalmax = config.deadline + datetime.timedelta(minutes=config.arrivalmax)
+			minleft = math.ceil(float((finalmin - datetime.datetime.now()).seconds) / 60)
+			maxleft = math.ceil(float((finalmax - datetime.datetime.now()).seconds) / 60)
+			addmin = int(panel.arrivalmin.data) - minleft
+			addmax = int(panel.arrivalmax.data) - maxleft
+			config.arrivalmin += addmin
+			config.arrivalmax += addmax
+		db.session.commit()
+		return redirect("/admin")
+
+	return render_template('admin.html', panel=panel, data=data)
+
 
 if __name__ == "__main__":
 	app.run()

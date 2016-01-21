@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+
+{% set title = "Pay" %}
+
+{% block content %}
+<div class="homepage" id="payment">
+	<div class="payment-header">Signed in as <span style="font-weight:400;">{{ data.username }}</span></div>
+	<div class="payment-header">Order total: <span style="font-weight:400;">${{ data.amount }}0</span></div>
+	<div class="payment-header">ETA: <span style="font-weight:400;">{{ data.eta }}</span></div>
+	<div class="payment-complete">
+		<span>Order Received!</span>
+	</div>
+	<div class="homepage-button">	
+		<a class="button" onclick="javascript:make_payment('{{ data.access_token }}')" style="cursor:pointer;">Confirm Order</a>
+	</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript" src="{{ url_for('static', filename='js/payment.js') }}"></script>
+{% endblock %}

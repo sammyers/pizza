@@ -2,8 +2,53 @@
 
 {% block content %}
 
-<div>Currently not ordering</div>
+{% if data.state == 'ordering' %}
+<div class="homepage" id="homepage-ordering">
+	<div id="homepage-food">{{ data.food }}</div>
+	<div id="order-countdown">
+		<span style="color:#00cc00; font-weight:400;">Ordering open for</span>
+	</div>
+	<div class="clock">
+		<span class="minutes"></span>
+		<span class="clock-label">minutes</span>
+		<span class="seconds"></span>
+		<span class="clock-label">seconds</span>
+	</div>
+	<div class="homepage-button">
+		<a href="/order" class="button">Place Order</a>
+	</div>
+</div>
 
-<a href="/request" class="button">Request food!</a>
+{% elif data.state == 'ordered' %}
+<div class="homepage" id="homepage-ordered">
+	<div class="admin-header">Order Complete!</div>
+	<div class="clock">
+		<span style="font-size:0.7em">Arriving in</span> 
+		<span class="minimum">{{ data.arrivalmin }}</span> - <span class="maximum">{{ data.arrivalmax }}</span>
+		<span style="font-size:0.7em">minutes</span>
+	</div>
+</div>
 
+{% else %}
+<div class="homepage" id="homepage-not-ordering">
+	<div class="admin-header">
+		<span style="color:#ff0000;">Currently not ordering</span>
+	</div>
+	<div class="homepage-button">
+		<a href="/request" class="button">Request food!</a>
+	</div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+	var DEADLINE = "{{ data.deadline }}";
+	var STATE = "{{ data.state }}";
+	var ARRIVALMIN = {{ data.arrivalmin }};
+	var ARRIVALMAX = {{ data.arrivalmax }};
+</script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/countdown.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/arrivaltime.js') }}"></script>
 {% endblock %}

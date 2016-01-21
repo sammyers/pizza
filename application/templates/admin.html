@@ -5,7 +5,79 @@
 {% block content %}
 
 <form action="" method="POST" name="admin">
+{{ panel.csrf_token }}
+
+{% if data.state == 'ordering' %}
+	<div class="homepage" id="admin-ordering">
+		<div class="admin-header">
+			<span style="color:#00cc00;">Ordering open</span>
+		</div>
+		<div class="clock">
+			<span class="minutes"></span>
+			<span class="clock-label">minutes</span>
+			<span class="seconds"></span>
+			<span class="clock-label">seconds</span>
+		</div>
+		<div class="deadline">
+			<div>{{ panel.addtime(class_="button") }}</div>
+			<div style="margin-top:0.25em">{{ panel.deadline_add }} minutes</div>
+		</div>
+		<div style="margin-top:1.5em">
+			<div style="float:left;">
+				<div>{{ panel.close(class_="button") }}</div>
+				<div class="arrivaltime">
+				Arrival time:<br>
+				{{ panel.arrivalmin(class_="arrivaltime", value=data.arrivalmin) }} to 
+				{{ panel.arrivalmax(class_="arrivaltime", value=data.arrivalmax) }} minutes
+				{{ panel.settime }}
+				</div>
+			</div>
+			<div style="position:absolute;right:3em">{{ panel.cancel(class_="button") }}</div>
+		</div>
+	</div>
+
+{% elif data.state == 'ordered' %}
+	<div class="homepage" id="admin-ordered">
+		<div class="admin-header">
+			<span>Order complete</span>
+		</div>
+		<div class="clock">
+			<span style="font-size:0.7em">Arriving in</span> 
+			<span class="minimum">{{ data.arrivalmin }}</span> - <span class="maximum">{{ data.arrivalmax }}</span> 
+			<span style="font-size:0.7em">minutes</span>
+		</div>
+		<div style="margin-top:1.5em;">{{ panel.updatetime(class_="button") }}</div>
+		<div class="arrivaltime" style="margin-top:0.25em">
+			<span class="minimum">{{ panel.arrivalmin(class_="arrivaltime", value=data.arrivalmin) }}</span> to 
+			<span class="maximum">{{ panel.arrivalmax(class_="arrivaltime", value=data.arrivalmax) }}</span> minutes
+		</div>	
+		<div class="admin-container">{{ panel.arrived(class_="button") }}</div>
+	</div>
+
+{% else %}
+	<div class="homepage" id="admin-not-ordering">
+		<div class="admin-header">
+			<span style="color:#ff0000;">Not ordering</span>
+		</div>
+		{{ panel.start(class_="button") }}<br>
+		<div class="deadline">
+		Order period:<br>
+		{{ panel.deadline }} minutes
+		</div><br>
+	</div>
+{% endif %}
 
 </form>
 
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+	var DEADLINE = "{{ data.deadline }}";
+	var STATE = "{{ data.state }}";
+	var ARRIVALMIN = {{ data.arrivalmin }};
+	var ARRIVALMAX = {{ data.arrivalmax }};
+</script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/countdown.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/arrivaltime.js') }}"></script>
 {% endblock %}

@@ -3,38 +3,72 @@
 {% set title = "Order Page" %}
 
 {% block content %}
-<div>Ordering from {{ food }} in {{ time }}</div>
-<br>
-<form action="" method="post" name="order">
-	<div class="form-group">
-		{{ form.csrf_token }}
-		<div>
-			Email:<br>
-			{{ form.email }}@students.olin.edu
+<div class="container">
+	<div id="countdown">
+		<div class="clock clock-small">
+			Ordering from {{ data.food }} in <span class="minutes"></span>:<span class="seconds"></span>
 		</div>
-		<br>
-		<div> 
-			{% for subfield in form.item %}
-				<tr>
-					<td>{{ subfield }}</td>
-					<td>{{ subfield.label }}</td>
-				</tr><br>
-			{% endfor %}
-		</div>
-		<div>{{ form.otherfield }}</div><br>
-		<div>
-			Toppings:<br>
-			{{ form.topping1 }}
-		</div>
-		<div>{{ form.topping2 }}</div>
-		<div>{{ form.topping3 }}</div>
-		<br>
-		<div>
-			Location:<br>
-			{{ form.location }}
-		</div>
-		<br>
-		<input type="submit" value="Continue">
 	</div>
-</form>
+	<br>
+	<form action="" method="post" name="order">
+		<div class="form-group">
+			{{ form.csrf_token }}
+
+			<div id="options"> 
+				<div class="section-label">Order Item</div>
+				{% for subfield in form.item %}
+					<tr>
+						<div class="option">
+							<td>{{ subfield }}</td>
+							<td>{{ subfield.label }}</td>
+						</div>
+					</tr>
+				{% endfor %}
+			</div>
+
+			<div id="right-toppings">
+				<div class="section-label">
+				<span>Right Toppings</span></div>
+				<div class="topping-section">	
+					<div class="topping">{{ form.topping4 }}</div>
+					<div class="topping">{{ form.topping5 }}</div>
+					<div class="topping">{{ form.topping6 }}</div>
+				</div>
+			</div>
+
+			<div id="left-toppings">
+				<div class="section-label">
+				<span>Toppings</span></div>
+				<div class="topping-section">	
+					<div class="topping">{{ form.topping1 }}</div>
+					<div class="topping">{{ form.topping2 }}</div>
+					<div class="topping">{{ form.topping3 }}</div>
+				</div>
+			</div>
+
+			<div id="email">
+				<div class="section-label">Email</div>
+				{{ form.email }}{{ domain }}
+			</div>
+
+			<div id="location">
+				<div class="section-label">Location</div>
+				<div id="location-select">{{ form.location }}</div>
+			</div>
+			
+			<div class="continue-button">
+				<input class="button" type="submit" value="Continue to Venmo">
+			</div>
+		</div>
+	</form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+	var DEADLINE = "{{ data.deadline }}";
+	var STATE = "{{ data.state }}";
+</script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/countdown.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/orderform.js') }}"></script>
 {% endblock %}

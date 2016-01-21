@@ -1,0 +1,297 @@
+body {
+	background-image: url("../img/pizza.jpg");
+	font-family: 'Source Sans Pro', sans-serif;
+	font-weight: 200;
+	font-size: 12pt;
+}
+
+input {
+	font-family: inherit;
+}
+
+input [type=text]{
+	font-weight: inherit;
+}
+
+select {
+	font-family: inherit;
+}
+
+td input[type=radio]{
+	vertical-align: middle;
+	margin: 0em;
+}
+
+.container {
+	padding: 1.2em;
+	text-align: center;
+}
+
+.homepage {
+	background-color: rgba(255, 255, 255, 0.7);
+	width: 15em;
+	height:10.75em;
+	margin: auto;
+	border: 0.1em solid;
+	border-color: #8a8a8a;
+	border-radius: 0.2em;
+	padding: 0.8em;
+	vertical-align: middle;
+	text-align: center;
+
+	position: absolute;
+	top:0;
+	bottom:0;
+	left:0;
+	right:0;
+}
+
+#homepage-ordering {
+	width: 25em;
+	height: 15em;
+}
+
+#homepage-ordered {
+	width: 25em;
+	height: 10em;
+}
+
+#homepage-not-ordering {
+	width: 25em;
+	height: 9.5em;
+}
+
+#admin-ordering {
+	width: 25em;
+	height: 20.5em;
+}
+
+#admin-ordered {
+	width: 25em;
+	height: 18.5em;
+}
+
+#admin-not-ordering {
+	width: 25em;
+	height: 12.5em;
+}
+
+.admin-header {
+	position: relative;
+	margin-top: 1em;
+	margin-bottom: 1em;
+	font-size: 1.7em;
+	font-weight: 400;
+}
+
+.admin-container {
+	margin: 1.5em;
+}
+
+.form-group {
+	background-color: rgba(255, 255, 255, 0.7);
+	width: 24em;
+	margin: auto;
+	border: 0.1em solid;
+	border-color: #8a8a8a;
+	border-radius: 0.2em;
+	padding: 0.8em;
+	vertical-align: middle;
+}
+
+.topping {
+	width: 9.5em;
+	margin: 0em;
+}
+
+.section-label {
+	height: 1.2em;
+	padding-bottom: 0.5em;
+	font-size: 1.2em;
+	font-weight: 200;
+	text-align: center;
+}
+
+#homepage-food {
+	padding: 0.75em;
+	font-size: 2em;
+}
+
+.homepage-button {
+	margin: 2em;
+}
+
+#order-countdown {
+	font-size: 1.4em;
+}
+
+#countdown {
+	background-color: rgba(100, 200, 255, 0.4);
+	font-size: 1.5em;
+	border: 0.05em solid;
+	border-color: #8a8a8a;
+	border-radius: 0.1em;
+	width: 13.5em;
+	margin: auto;
+	font-weight: 200;
+	padding: 0.25em;
+}
+
+#email {
+	margin-top: 7em;
+	padding: 1em;
+	padding-top: 0em;
+}
+
+#email input {
+	margin: 0em;
+	padding: 0em;
+	font-size: inherit;
+	text-align: right;
+}
+
+#options {
+	float: left;
+	text-align: left;
+	padding: 1em;
+	padding-top: 0em;
+	padding-bottom: 0em;
+	width: 9.5em;
+}
+
+.option {
+	height: 1.5em;
+}
+
+.option input[type=radio]{
+	vertical-align: middle;
+}
+
+.option label {
+	vertical-align: middle;
+}
+
+#right-toppings {
+	float: right;
+	padding: 1em;
+	padding-top: 0em;
+	padding-bottom: 0em;
+	display: none;
+}
+
+#left-toppings {
+	float: right;
+	padding: 1em;
+	padding-top: 0em;
+	padding-bottom: 0em;
+}
+
+#location {
+	margin-top: 0em;
+}
+
+#location-select {
+}
+
+#location-select select {
+	padding: 0px;
+	margin-top: 0px;
+}
+
+.continue-button {
+	padding: 1em;
+	padding-bottom: 0px;
+}
+
+.continue-button input {
+	font-weight: 400;
+	font-size: 1em;
+}
+
+#admin-link {
+	position: absolute;
+	right: 2em;
+	top: 2em;
+}
+
+#home-link {
+	position: absolute;
+	right: 2em;
+	top: 5em;
+}
+
+.button {
+	background: -moz-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(229,229,229,0.3) 100%); /* FF3.6-15 */
+	background: -webkit-linear-gradient(top, rgba(255,255,255,1) 0%,rgba(229,229,229,0.3) 100%); /* Chrome10-25,Safari5.1-6 */
+	background: linear-gradient(to bottom, rgba(255,255,255,1) 0%,rgba(229,229,229,0.3) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+	-webkit-border-radius: 8;
+	-moz-border-radius: 8;
+ 	border-radius: 0.2em;
+  	font-size: 1em;
+  	font-weight: 400;
+  	padding: 0.4em 0.8em 0.4em 0.8em;
+  	border: solid #6c6c7b 0.1em;
+  	text-decoration: none;
+  	opacity: 0.9;
+  	color: #000000;
+}
+
+.button:hover {
+	background: -moz-linear-gradient(top, rgba(232,232,232,1) 0%, rgba(208,208,208,0) 100%); /* FF3.6-15 */
+	background: -webkit-linear-gradient(top, rgba(232,232,232,1) 0%,rgba(208,208,208,0) 100%); /* Chrome10-25,Safari5.1-6 */
+	background: linear-gradient(to bottom, rgba(232,232,232,1) 0%,rgba(208,208,208,0) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+  	text-decoration: none;
+  	opacity: 0.8;
+}
+
+.deadline {
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 1.5em;
+	width: 10em;
+	left:0;
+	right:0;
+}
+
+.deadline input[type=number] {
+	width: 2.2em;
+}
+
+.arrivaltime {
+	margin: 0.5em;
+	margin-top: 0em;
+}
+
+.arrivaltime input[type=number] {
+	width: 2.2em;
+}
+
+.clock {
+	font-size: 2em;
+}
+
+.clock-small {
+	font-size: 1em;
+}
+
+.clock-hidden {
+	display: none;
+}
+
+.clock-label {
+	font-size: 0.7em;
+}
+
+.payment-header {
+	font-size: 1.1em;
+	margin: 0.6em;
+}
+
+.payment-complete {
+	display: none;
+	font-size: 1.2em;
+	font-weight: 400;
+	color: #00cc00;
+	margin: 2em;
+	margin-top: 1.5em;
+}
