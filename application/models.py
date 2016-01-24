@@ -9,6 +9,7 @@ class Half(db.Model):
     topping1 = db.Column(db.String(25))
     topping2 = db.Column(db.String(25))
     topping3 = db.Column(db.String(25))
+    time_added = db.Column(db.DateTime)
 
     def __repr__(self):
         return "<Pizza half with {}, {}, and {}>".format(self.topping1, self.topping2, self.topping3)
@@ -38,6 +39,11 @@ class Pizza(db.Model):
 
     person1 = db.relationship('Person', foreign_keys=[person1_id])
     person2 = db.relationship('Person', foreign_keys=[person2_id])
+
+    time_added = db.Column(db.DateTime)
+
+    def __repr__(self):
+        return "<{} pizza created at {}>".format(self.size.title(), self.time_added)
 
 
 class Person(db.Model):
@@ -79,3 +85,11 @@ class Config(db.Model):
                                                                                           self.deadline, 
                                                                                           self.arrivalmin,
                                                                                           self.arrivalmax)
+
+
+class Request(db.Model):
+    __tablename__ = 'requests'
+
+    id = db.Column(db.Integer, primary_key=True, index=True)
+    email = db.Column(db.String(50), unique=True)
+    time = db.Column(db.String(20))

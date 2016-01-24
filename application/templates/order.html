@@ -46,14 +46,26 @@
 				</div>
 			</div>
 
-			<div id="email">
-				<div class="section-label">Email</div>
-				{{ form.email }}{{ domain }}
+			<div id="contact-info">
+				<div id="email">
+					<div class="section-label">Email</div>
+					{{ form.email }}{{ domain }}
+				</div>
+
+				<div id="location">
+					<div class="section-label">Location</div>
+					<div id="location-select">{{ form.location }}</div>
+				</div>
 			</div>
 
-			<div id="location">
-				<div class="section-label">Location</div>
-				<div id="location-select">{{ form.location }}</div>
+			<div id="sauce-select">
+				<div class="section-label">Sauce</div>
+				{{ form.sauce }}
+			</div>
+
+			<div id="price">
+				<div class="section-label">Total</div>
+				<div id="price-total">$7.50</div>
 			</div>
 			
 			<div class="continue-button">

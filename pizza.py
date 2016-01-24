@@ -1,14 +1,16 @@
 from application import app, db
 from flask import redirect, render_template, request, session, jsonify
 import requests, datetime, threading, decimal, math
-from application.models import Config, Half, Pizza, Person
-from application.forms import OrderForm, AdminPanel
+from application.models import Config, Half, Pizza, Person, Request
+from application.forms import OrderForm, AdminPanel, RequestForm
 from application.constants import CONSUMER_ID, CONSUMER_SECRET 
 from application.constants import VENMO_ADMIN, VENMO_NOTE
 from application.constants import LARGE_PRICE, MEDIUM_PRICE
-from application.constants import EMAIL_DOMAIN
+from application.constants import EMAIL_DOMAIN, ORDER_TIMES
 from application.tasks import close_order
+from application.helpers import ReadablePizza
 from celery.task.control import revoke
+from sqlalchemy.exc import IntegrityError
 
 
 @app.route("/")
@@ -24,6 +26,7 @@ def order():
 		return redirect("/")
 	form = OrderForm(request.form)
 	if request.method == 'POST' and form.validate():
+		db.session.rollback()
 		if form.item.data == 'half':
 			order = Half()
 			order.email = form.email.data + EMAIL_DOMAIN
@@ -41,7 +44,8 @@ def order():
 			order.topping1_right = form.topping4.data
 			order.topping2_right = form.topping5.data
 			order.topping3_right = form.topping6.data
-			order.size = 'large'
+			order.sauce = form.sauce.data
+			order.size = 'Large'
 			person.email = form.email.data + EMAIL_DOMAIN
 			person.location = form.location.data
 			order.person1 = person
@@ -54,12 +58,14 @@ def order():
 			order.topping2_left = form.topping2.data
 			order.topping1_right = form.topping4.data
 			order.topping2_right = form.topping5.data
-			order.size = 'medium'
+			order.sauce = form.sauce.data
+			order.size = 'Medium'
 			person.email = form.email.data + EMAIL_DOMAIN
 			person.location = form.location.data
 			order.person1 = person
 			db.session.add(person)
 			session['payment_amount'] = MEDIUM_PRICE
+		order.time_added = datetime.datetime.now()
 		db.session.add(order)
 		url = 'https://api.venmo.com/v1/oauth/authorize?client_id={}&scope=make_payments&response_type=code'.format(CONSUMER_ID)
 		return redirect(url)
@@ -68,7 +74,22 @@ def order():
 
 @app.route("/request", methods=['GET','POST'])
 def request_food():
-	return render_template('request.html')
+	form = RequestForm(request.form)
+	times = [time[0] for time in ORDER_TIMES]
+	requests = [len(db.session.query(Request).filter_by(time=time).all()) for time in times]
+	current = []
+	for a, b in zip(times, requests):
+		current.append({"time": a, "requests": b})
+	if request.method == 'POST' and form.validate():
+		try:
+			food_request = Request(email=form.request_email.data + EMAIL_DOMAIN, time=form.time.data)
+			db.session.add(food_request)
+			db.session.commit()
+			return redirect("/")
+		except IntegrityError:
+			db.session.rollback()
+			return redirect("/request")
+	return render_template('request.html', form=form, domain=EMAIL_DOMAIN, current=current)
 
 
 @app.route("/done")
@@ -135,6 +156,7 @@ def make_payment():
 	response = requests.post(url, payload)
 	data = response.json()
 	session.clear()
+	db.session.commit()
 	return jsonify(data)
 
 
@@ -156,7 +178,9 @@ def check_status():
 def admin():
 	data = db.session.query(Config).first()
 	panel = AdminPanel(request.form)
+
 	if request.method == 'POST':
+		db.session.rollback()
 		config = db.session.query(Config).first()
 		if panel.start.data and config.state == 'not ordering':
 			config.state = 'ordering'
@@ -210,6 +234,13 @@ def admin():
 			config.arrivalmax += addmax
 		db.session.commit()
 		return redirect("/admin")
+
+	if data.state == 'ordering':
+		half_orders = db.session.query(Half).all()
+		whole_orders = db.session.query(Pizza).all()
+		orders = [ReadablePizza(pizza) for pizza in half_orders] + [ReadablePizza(pizza) for pizza in whole_orders]
+		orders.sort(key=lambda x: x.time)
+		return render_template('admin.html', panel=panel, data=data, orders=orders)
 
 	return render_template('admin.html', panel=panel, data=data)
 

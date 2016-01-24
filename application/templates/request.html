@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+
+{% set title = "Request" %}
+
+{% block content %}
+
+<div class="request-container">
+	<div id="request-form">
+		<form action="" method="post" name="request">
+			{{ form.csrf_token }}
+			<div id="email" style="margin-top:0em;padding:0em;">
+				<div class="section-label">Email</div>
+				<div>{{ form.request_email }}{{ domain }}</div>
+			</div>
+			<div class="section-label" style="margin-top:0.5em;">Order Time</div>
+			<div>{{ form.time }}</div>
+			<div class="continue-button">
+				<input class="button" type="submit" value="Submit Request">
+			</div>
+		</form>
+	</div>
+	<div id="request-updates">
+		<div class="section-label" style="padding:0;">Current Requests</div>
+		{% for item in current %}
+		<div class="request-update">
+		<span>{{ item.time }}: </span>
+		<span style="font-weight:400;">{{ item.requests }}</span>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+
+{% endblock %}

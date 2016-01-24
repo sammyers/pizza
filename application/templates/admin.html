@@ -4,40 +4,65 @@
 
 {% block content %}
 
-<form action="" method="POST" name="admin">
-{{ panel.csrf_token }}
-
 {% if data.state == 'ordering' %}
-	<div class="homepage" id="admin-ordering">
-		<div class="admin-header">
-			<span style="color:#00cc00;">Ordering open</span>
-		</div>
-		<div class="clock">
-			<span class="minutes"></span>
-			<span class="clock-label">minutes</span>
-			<span class="seconds"></span>
-			<span class="clock-label">seconds</span>
-		</div>
-		<div class="deadline">
-			<div>{{ panel.addtime(class_="button") }}</div>
-			<div style="margin-top:0.25em">{{ panel.deadline_add }} minutes</div>
-		</div>
-		<div style="margin-top:1.5em">
-			<div style="float:left;">
-				<div>{{ panel.close(class_="button") }}</div>
-				<div class="arrivaltime">
-				Arrival time:<br>
-				{{ panel.arrivalmin(class_="arrivaltime", value=data.arrivalmin) }} to 
-				{{ panel.arrivalmax(class_="arrivaltime", value=data.arrivalmax) }} minutes
-				{{ panel.settime }}
-				</div>
+<div class="admin-container">	
+	<div id="admin-ordering">
+		<form action="" method="POST" name="admin">
+			{{ panel.csrf_token }}
+			<div class="admin-header">
+				<span style="color:#00cc00;">Ordering open</span>
 			</div>
-			<div style="position:absolute;right:3em">{{ panel.cancel(class_="button") }}</div>
+			<div class="clock">
+				<span class="minutes"></span>
+				<span class="clock-label">minutes</span>
+				<span class="seconds"></span>
+				<span class="clock-label">seconds</span>
+			</div>
+			<div class="deadline">
+				<div>{{ panel.addtime(class_="button") }}</div>
+				<div style="margin-top:0.25em">{{ panel.deadline_add }} minutes</div>
+			</div>
+			<div style="margin-top:1.5em">
+				<div style="float:left;">
+					<div>{{ panel.close(class_="button") }}</div>
+					<div class="arrivaltime">
+					Arrival time:<br>
+					{{ panel.arrivalmin(class_="arrivaltime", value=data.arrivalmin) }} to 
+					{{ panel.arrivalmax(class_="arrivaltime", value=data.arrivalmax) }} minutes
+					{{ panel.settime }}
+					</div>
+				</div>
+				<div style="position:absolute;right:3em">{{ panel.cancel(class_="button") }}</div>
+			</div>
+		</form>
+	</div>
+	<div id="current-orders">
+		<div class="section-label">Current Orders</div>
+		<div>
+			<table style="border-spacing:0.5em;margin:auto;">
+				<tr>
+					<th>Time</th>
+					<th>Size</th>
+					<th>Name</th>
+				</tr>
+				{% for order in orders %}
+				<tr align="center">
+					<div>
+						<td>{{ order.time }}</td>
+						<td>{{ order.size }}</td>
+						<td>{{ order.email }}</td>
+					</div>
+				</tr>
+				{% endfor %}
+			</table>
 		</div>
 	</div>
+</div>
 
 {% elif data.state == 'ordered' %}
-	<div class="homepage" id="admin-ordered">
+<div class="homepage" id="admin-ordered">
+	<form action="" method="POST" name="admin">
+		{{ panel.csrf_token }}
 		<div class="admin-header">
 			<span>Order complete</span>
 		</div>
@@ -51,11 +76,14 @@
 			<span class="minimum">{{ panel.arrivalmin(class_="arrivaltime", value=data.arrivalmin) }}</span> to 
 			<span class="maximum">{{ panel.arrivalmax(class_="arrivaltime", value=data.arrivalmax) }}</span> minutes
 		</div>	
-		<div class="admin-container">{{ panel.arrived(class_="button") }}</div>
-	</div>
+		<div style="margin:1.5em;">{{ panel.arrived(class_="button") }}</div>
+	</form>
+</div>
 
 {% else %}
-	<div class="homepage" id="admin-not-ordering">
+<div class="homepage" id="admin-not-ordering">
+	<form action="" method="POST" name="admin">
+		{{ panel.csrf_token }}
 		<div class="admin-header">
 			<span style="color:#ff0000;">Not ordering</span>
 		</div>
@@ -64,10 +92,9 @@
 		Order period:<br>
 		{{ panel.deadline }} minutes
 		</div><br>
-	</div>
+	</form>
+</div>
 {% endif %}
-
-</form>
 
 {% endblock %}
 

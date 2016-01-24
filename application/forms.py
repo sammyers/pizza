@@ -3,10 +3,12 @@ from flask.ext.wtf.html5 import NumberInput
 from wtforms import StringField, BooleanField, RadioField, SelectField, SubmitField
 from wtforms.validators import InputRequired
 from models import Topping
+from constants import CAMPUS_LOCATIONS, ORDER_TIMES
 
 toppings = [(topping.name, topping.name.title()) for topping in Topping.query.all()]
 toppings.insert(0, ('None', 'None'))
-locations = [('WH', 'West Hall'), ('EH', 'East Hall'), ('AC', 'Academic Center')]
+locations = CAMPUS_LOCATIONS
+sauces = [('Tomato', 'Robust Inspired'), ('Marinara', 'Hearty Marinara'), ('BBQ', 'BBQ'), ('White', 'Garlic Parmesan'), ('Alfredo', 'Alfredo')]
 
 class OrderForm(Form):
 	email = StringField('Email', validators=[InputRequired()])
@@ -19,8 +21,7 @@ class OrderForm(Form):
 	topping5 = SelectField('Topping 5', choices=toppings, default='None')
 	topping6 = SelectField('Topping 6', choices=toppings, default='None')
 	location = SelectField('Location', choices=locations)
-	left_toppings = [SelectField('Topping {}'.format(number), choices=toppings, default='None') for number in range(1,4)]
-	right_toppings = [SelectField('Topping {}'.format(number), choices=toppings, default='None') for number in range(1,4)]
+	sauce = SelectField('Sauce', choices=sauces, default='Tomato')
 
 class AdminPanel(Form):
 	start = SubmitField('Start Order')
@@ -34,3 +35,9 @@ class AdminPanel(Form):
 	deadline_add = StringField('Add to Order Period', widget=NumberInput(), default="5")
 	arrivalmin = StringField('Minimum Time', widget=NumberInput(), default='25')
 	arrivalmax = StringField('Maximum Time', widget=NumberInput(), default='35')
+
+times = ORDER_TIMES
+
+class RequestForm(Form):
+	request_email = StringField('Email', validators=[InputRequired()])
+	time = SelectField('Time', choices=times)
