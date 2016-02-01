@@ -210,13 +210,13 @@ td input[type=radio]{
 	padding: 0.25em;
 }
 
-#email {
+#email-field {
 	margin-top: 7em;
 	padding: 1em;
 	padding-top: 0em;
 }
 
-#email input {
+#email-field input {
 	margin: 0em;
 	padding: 0em;
 	font-size: inherit;
@@ -278,7 +278,7 @@ td input[type=radio]{
 	bottom: 4em;
 }
 
-#price {
+#price-field {
 	position: absolute;
 	right: 3em;
 	bottom: 3.8em;

@@ -22,6 +22,7 @@ class OrderForm(Form):
 	topping6 = SelectField('Topping 6', choices=toppings, default='None')
 	location = SelectField('Location', choices=locations)
 	sauce = SelectField('Sauce', choices=sauces, default='Tomato')
+	price = StringField('Price')
 
 class AdminPanel(Form):
 	start = SubmitField('Start Order')

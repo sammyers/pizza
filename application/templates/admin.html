@@ -37,7 +37,7 @@
 		</form>
 	</div>
 	<div id="current-orders">
-		<div class="section-label">Current Orders</div>
+		<div class="section-label" style="padding:0;">Current Orders</div>
 		<div>
 			<table style="border-spacing:0.5em;margin:auto;">
 				<tr>
@@ -46,7 +46,7 @@
 					<th>Name</th>
 				</tr>
 				{% for order in orders %}
-				<tr align="center">
+				<tr align="center" title="{{ order.list_toppings }}">
 					<div>
 						<td>{{ order.time }}</td>
 						<td>{{ order.size }}</td>

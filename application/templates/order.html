@@ -47,12 +47,12 @@
 			</div>
 
 			<div id="contact-info">
-				<div id="email">
+				<div id="email-field">
 					<div class="section-label">Email</div>
 					{{ form.email }}{{ domain }}
 				</div>
 
-				<div id="location">
+				<div id="location-info">
 					<div class="section-label">Location</div>
 					<div id="location-select">{{ form.location }}</div>
 				</div>
@@ -63,9 +63,10 @@
 				{{ form.sauce }}
 			</div>
 
-			<div id="price">
+			<div id="price-field">
+				<div style="display:none;">{{ form.price }}</div>
 				<div class="section-label">Total</div>
-				<div id="price-total">$7.50</div>
+				<div id="price-total"></div>
 			</div>
 			
 			<div class="continue-button">
@@ -80,6 +81,8 @@
 <script type="text/javascript">
 	var DEADLINE = "{{ data.deadline }}";
 	var STATE = "{{ data.state }}";
+	var LARGE_PRICE = {{ large_price }};
+	var MEDIUM_PRICE = {{ medium_price }};
 </script>
 <script type="text/javascript" src="{{ url_for('static', filename='js/countdown.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='js/orderform.js') }}"></script>

@@ -8,7 +8,7 @@ from application.constants import VENMO_ADMIN, VENMO_NOTE
 from application.constants import LARGE_PRICE, MEDIUM_PRICE
 from application.constants import EMAIL_DOMAIN, ORDER_TIMES
 from application.tasks import close_order
-from application.helpers import ReadablePizza
+from application.helpers import ReadablePizza, set_price
 from celery.task.control import revoke
 from sqlalchemy.exc import IntegrityError
 
@@ -26,7 +26,7 @@ def order():
 		return redirect("/")
 	form = OrderForm(request.form)
 	if request.method == 'POST' and form.validate():
-		db.session.rollback()
+		db.session.expunge_all()
 		if form.item.data == 'half':
 			order = Half()
 			order.email = form.email.data + EMAIL_DOMAIN
@@ -34,7 +34,6 @@ def order():
 			order.topping1 = form.topping1.data
 			order.topping2 = form.topping2.data
 			order.topping3 = form.topping3.data
-			session['payment_amount'] = LARGE_PRICE / 2
 		elif form.item.data == 'whole':
 			order = Pizza()
 			person = Person()
@@ -50,7 +49,6 @@ def order():
 			person.location = form.location.data
 			order.person1 = person
 			db.session.add(person)
-			session['payment_amount'] = LARGE_PRICE
 		elif form.item.data == 'medium':
 			order = Pizza()
 			person = Person()
@@ -64,12 +62,14 @@ def order():
 			person.location = form.location.data
 			order.person1 = person
 			db.session.add(person)
-			session['payment_amount'] = MEDIUM_PRICE
 		order.time_added = datetime.datetime.now()
 		db.session.add(order)
+		db.session.commit()
+		session['payment_amount'] = set_price(form)
 		url = 'https://api.venmo.com/v1/oauth/authorize?client_id={}&scope=make_payments&response_type=code'.format(CONSUMER_ID)
 		return redirect(url)
-	return render_template('order.html', data=data, form=form, domain=EMAIL_DOMAIN)
+	return render_template('order.html', data=data, form=form, domain=EMAIL_DOMAIN, 
+						   large_price=LARGE_PRICE, medium_price=MEDIUM_PRICE)
 
 
 @app.route("/request", methods=['GET','POST'])
@@ -81,13 +81,14 @@ def request_food():
 	for a, b in zip(times, requests):
 		current.append({"time": a, "requests": b})
 	if request.method == 'POST' and form.validate():
+		db.session.expunge_all()
 		try:
 			food_request = Request(email=form.request_email.data + EMAIL_DOMAIN, time=form.time.data)
 			db.session.add(food_request)
 			db.session.commit()
 			return redirect("/")
 		except IntegrityError:
-			db.session.rollback()
+			db.session.expunge_all()
 			return redirect("/request")
 	return render_template('request.html', form=form, domain=EMAIL_DOMAIN, current=current)
 
@@ -180,7 +181,7 @@ def admin():
 	panel = AdminPanel(request.form)
 
 	if request.method == 'POST':
-		db.session.rollback()
+		db.session.expunge_all()
 		config = db.session.query(Config).first()
 		if panel.start.data and config.state == 'not ordering':
 			config.state = 'ordering'
