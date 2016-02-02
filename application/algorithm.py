@@ -1,4 +1,6 @@
 """
+Credit: Matthew Beaudouin
+
  Mixing half pizzas together such that we maximize the overlap of toppings.
  In this version, we consider 3 toppings (pizza is an object)
  This algorithm looks for matches of 3s, then 2s, then 1s 

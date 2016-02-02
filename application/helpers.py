@@ -11,7 +11,7 @@ class ReadablePizza(object):
 			self.toppings = [pizza.topping1, pizza.topping2, pizza.topping3]
 			self.toppings = filter(None, self.toppings)
 			self.list_toppings = ', '.join(self.toppings).title()
-			self.email = pizza.email.split('@')[0]
+			self.email = pizza.email.split('@')[0].replace('.', ' ').title()
 			self.location = pizza.location
 		else:
 			self.size = pizza.size
@@ -22,7 +22,12 @@ class ReadablePizza(object):
 			self.list_toppings = 'Left: {}; Right: {}'.format(
 				', '.join(self.toppings['Left']).title(),
 				', '.join(self.toppings['Right']).title())
-			self.email = pizza.person1.email.split('@')[0]
+			if pizza.person2:
+				email1 = pizza.person1.email.split('@')[0].split('.')[0].title()
+				email2 = pizza.person2.email.split('@')[0].split('.')[0].title()
+				self.email = email1 + ' and ' + email2
+			else:
+				self.email = pizza.person1.email.split('@')[0].split('.')[0].title()
 			self.location = pizza.person1.location
 		self.time = datetime.datetime.strftime(pizza.time_added, '%I:%M %p').lstrip('0')
 
@@ -64,7 +69,7 @@ def get_pairs(halves):
 		halves_by_id[half.id] = (toppings[half.topping1], toppings[half.topping2], toppings[half.topping3])
 	return pizzalgorithm(halves_by_id)
 
-def make_whole_pizzas(halves):
+def make_pizzas(halves):
 	pairs = get_pairs(halves)
 	wholes = []
 	for pair in pairs:
@@ -84,4 +89,33 @@ def make_whole_pizzas(halves):
 			whole.size = 'Large'
 			whole.time_added = datetime.datetime.now()
 			wholes.append(whole)
+		else: wholes.append(db.session.query(Half).filter_by(id=pair[0]).first())
 	return wholes
+
+def add_pizzas():
+	all_halves = db.session.query(Half).all()
+	new_pizzas = make_pizzas(all_halves)
+	if not all(isinstance(pizza, Pizza) for pizza in new_pizzas):
+		oddhalf = new_pizzas.pop()
+	for pizza in new_pizzas:
+		db.session.add(pizza)
+	try:
+		ids = [half.id for half in db.session.query(Half).filter(Half.id != oddhalf.id).all()]
+	except UnboundLocalError:
+		ids = [half.id for half in db.session.query(Half).all()]
+	for item in ids:
+		oldhalf = db.session.query(Half).filter_by(id=item).first()
+		db.session.delete(oldhalf)
+	db.session.commit()
+
+def clear_tables():
+	halves = db.session.query(Half).all()
+	pizzas = db.session.query(Pizza).all()
+	people = db.session.query(Person).all()
+	for half in halves:
+		db.session.delete(half)
+	for pizza in pizzas:
+		db.session.delete(pizza)
+	for person in people:
+		db.session.delete(person)
+	db.session.commit()

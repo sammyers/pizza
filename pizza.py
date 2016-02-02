@@ -8,7 +8,7 @@ from application.constants import VENMO_ADMIN, VENMO_NOTE
 from application.constants import LARGE_PRICE, MEDIUM_PRICE
 from application.constants import EMAIL_DOMAIN, ORDER_TIMES
 from application.tasks import close_order
-from application.helpers import ReadablePizza, set_price
+from application.helpers import ReadablePizza, set_price, add_pizzas, clear_tables
 from celery.task.control import revoke
 from sqlalchemy.exc import IntegrityError
 
@@ -184,6 +184,7 @@ def admin():
 		db.session.expunge_all()
 		config = db.session.query(Config).first()
 		if panel.start.data and config.state == 'not ordering':
+			clear_tables()
 			config.state = 'ordering'
 			duration = datetime.timedelta(minutes=int(panel.deadline.data))
 			config.deadline = datetime.datetime.now() + duration
@@ -199,6 +200,7 @@ def admin():
 			config.arrivalmax = panel.arrivalmax.data
 			revoke(config.timer_id)
 			config.timer_id = None
+			add_pizzas()
 
 		elif panel.arrived.data and config.state == 'ordered':
 			config.state = 'not ordering'
