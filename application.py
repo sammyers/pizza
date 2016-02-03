@@ -268,5 +268,7 @@ def admin():
 	return render_template('admin.html', panel=panel, data=data)
 
 
+application = app
+
 if __name__ == "__main__":
-	app.run()
+	application.run(host='0.0.0.0')

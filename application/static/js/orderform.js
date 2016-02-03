@@ -59,7 +59,7 @@ function wholePizza(){
 function halfPizza(){
 	$("#left-toppings .section-label").text("Toppings");
 	$("#right-toppings").hide();
-	$("#sauce-select").hide()
+	$("#sauce-select").hide();
 	$("#price").css("right", "3em");
 	$(".form-group").css("width", "24em");
 	pizzasize = "half large";
