@@ -3,7 +3,6 @@ app_config.py
 email.py
 open_db.sh
 *.pyc
-consamables
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
