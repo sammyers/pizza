@@ -3,3 +3,9 @@ app_config.py
 email.py
 open_db.sh
 *.pyc
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+.ebextensions/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
