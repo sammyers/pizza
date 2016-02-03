@@ -9,23 +9,28 @@ from application.constants import LARGE_PRICE, MEDIUM_PRICE
 from application.constants import EMAIL_DOMAIN, ORDER_TIMES
 from application.tasks import close_order
 from application.helpers import ReadablePizza, set_price, add_pizzas, clear_tables
+from application.autoemail import order_confirmation, arrival_confirmation
 from celery.task.control import revoke
 from sqlalchemy.exc import IntegrityError
 
 
 @app.route("/")
 def homepage():
+	session.clear()
 	data = db.session.query(Config).first()
 	return render_template('homepage.html', data=data)
 
 
 @app.route("/order", methods=['GET', 'POST'])
 def order():
+	if request.method == 'GET':
+		session.clear()
 	data = db.session.query(Config).first()
 	if data.state != 'ordering':
 		return redirect("/")
 	form = OrderForm(request.form)
 	if request.method == 'POST' and form.validate():
+		db.session.rollback()
 		db.session.expunge_all()
 		if form.item.data == 'half':
 			order = Half()
@@ -64,7 +69,9 @@ def order():
 			db.session.add(person)
 		order.time_added = datetime.datetime.now()
 		db.session.add(order)
-		db.session.commit()
+		db.session.flush()
+		session['order_id'] = order.id
+		session['order_type'] = type(order).__name__
 		session['payment_amount'] = set_price(form)
 		url = 'https://api.venmo.com/v1/oauth/authorize?client_id={}&scope=make_payments&response_type=code'.format(CONSUMER_ID)
 		return redirect(url)
@@ -81,6 +88,7 @@ def request_food():
 	for a, b in zip(times, requests):
 		current.append({"time": a, "requests": b})
 	if request.method == 'POST' and form.validate():
+		db.session.rollback()
 		db.session.expunge_all()
 		try:
 			food_request = Request(email=form.request_email.data + EMAIL_DOMAIN, time=form.time.data)
@@ -88,19 +96,17 @@ def request_food():
 			db.session.commit()
 			return redirect("/")
 		except IntegrityError:
+			db.session.rollback()
 			db.session.expunge_all()
 			return redirect("/request")
 	return render_template('request.html', form=form, domain=EMAIL_DOMAIN, current=current)
 
 
-@app.route("/done")
-def done():
-	return render_template('done.html')
-
-
 @app.route("/oauth-authorized")
 def oauth_authorized():
 	if request.args.get('error'):
+		db.session.rollback()
+		db.session.expunge_all()
 		return redirect("/order")
 	AUTHORIZATION_CODE = request.args.get('code')
 	data = {
@@ -156,6 +162,11 @@ def make_payment():
 	url = "https://api.venmo.com/v1/payments"
 	response = requests.post(url, payload)
 	data = response.json()
+	if session['order_type'] == 'Half':
+		order = db.session.query(Half).filter_by(id=session['order_id']).first()
+	else:
+		order = db.session.query(Pizza).filter_by(id=session['order_id']).first()
+	order_confirmation(order, session['payment_amount'])
 	session.clear()
 	db.session.commit()
 	return jsonify(data)
@@ -177,10 +188,12 @@ def check_status():
 
 @app.route("/admin", methods=['GET','POST'])
 def admin():
+	session.clear()
 	data = db.session.query(Config).first()
 	panel = AdminPanel(request.form)
 
 	if request.method == 'POST':
+		db.session.rollback()
 		db.session.expunge_all()
 		config = db.session.query(Config).first()
 		if panel.start.data and config.state == 'not ordering':
@@ -194,18 +207,25 @@ def admin():
 			config.timer_id = timer.task_id
 
 		elif panel.close.data and config.state == 'ordering' and int(panel.arrivalmin.data) < int(panel.arrivalmax.data):
-			config.state = 'ordered'
-			config.deadline = datetime.datetime.now()
-			config.arrivalmin = panel.arrivalmin.data
-			config.arrivalmax = panel.arrivalmax.data
-			revoke(config.timer_id)
-			config.timer_id = None
 			add_pizzas()
+			if db.session.query(Half).all() != []:
+				config.deadline = datetime.datetime.now() + datetime.timedelta(minutes=5)
+				revoke(config.timer_id)
+				timer = close_order.apply_async(countdown=300)
+				config.timer_id = timer.task_id
+			else:
+				config.state = 'ordered'
+				config.deadline = datetime.datetime.now()
+				config.arrivalmin = panel.arrivalmin.data
+				config.arrivalmax = panel.arrivalmax.data
+				revoke(config.timer_id)
+				config.timer_id = None
 
 		elif panel.arrived.data and config.state == 'ordered':
 			config.state = 'not ordering'
 			config.arrivalmin = 0
 			config.arrivalmax = 0
+			arrival_confirmation()
 
 		elif panel.cancel.data and config.state == 'ordering':
 			config.state = 'not ordering'

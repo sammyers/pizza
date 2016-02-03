@@ -3,13 +3,13 @@ from __init__ import db
 from models import Half, Pizza, Person, Topping
 from constants import LARGE_PRICE, MEDIUM_PRICE
 from algorithm import pizzalgorithm
+from sets import Set
 
 class ReadablePizza(object):
 	def __init__(self, pizza):
 		if not hasattr(pizza, 'size'):
 			self.size = 'Half'
-			self.toppings = [pizza.topping1, pizza.topping2, pizza.topping3]
-			self.toppings = filter(None, self.toppings)
+			self.toppings = filter(lambda x: x != 'None', [pizza.topping1, pizza.topping2, pizza.topping3])
 			self.list_toppings = ', '.join(self.toppings).title()
 			self.email = pizza.email.split('@')[0].replace('.', ' ').title()
 			self.location = pizza.location
@@ -17,8 +17,8 @@ class ReadablePizza(object):
 			self.size = pizza.size
 			self.toppings = {"Left": [pizza.topping1_left, pizza.topping2_left, pizza.topping3_left],
 							 "Right": [pizza.topping1_right, pizza.topping2_right, pizza.topping3_right]}
-			self.toppings['Left'] = filter(None, self.toppings['Left'])
-			self.toppings['Right'] = filter(None, self.toppings['Right'])
+			self.toppings['Left'] = filter(lambda x: x != 'None', self.toppings['Left'])
+			self.toppings['Right'] = filter(lambda x: x != 'None', self.toppings['Right'])
 			self.list_toppings = 'Left: {}; Right: {}'.format(
 				', '.join(self.toppings['Left']).title(),
 				', '.join(self.toppings['Right']).title())
@@ -119,3 +119,17 @@ def clear_tables():
 	for person in people:
 		db.session.delete(person)
 	db.session.commit()
+
+def topping_combo(left_toppings, right_toppings):
+	left = Set(left_toppings)
+	right = Set(right_toppings)
+	both = left | right
+	toppings = {'Whole':[], 'Left':[], 'Right':[]}
+	for item in both:
+		if item in left & right:
+			toppings['Whole'].append(item)
+		elif item in left:
+			toppings['Left'].append(item)
+		else:
+			toppings['Right'].append(item)
+	return toppings

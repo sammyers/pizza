@@ -131,7 +131,7 @@ td input[type=radio]{
 }
 
 #current-orders {
-	background-color: rgba(100, 200, 255, 0.5);
+	background-color: rgba(100, 200, 255, 0.7);
 	border: 0.1em solid;
 	border-color: #8a8a8a;
 	border-radius: 0.2em;
