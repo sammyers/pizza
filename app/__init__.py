@@ -1,10 +1,10 @@
 from factory import create_app
 from flask.ext.sqlalchemy import SQLAlchemy
 
-app = create_app()
+application = create_app()
 
-app.template_folder = 'application/templates'
-app.static_folder = 'application/static'
+application.template_folder = 'app/templates'
+application.static_folder = 'app/static'
 
 class UnLockedAlchemy(SQLAlchemy):
     def apply_driver_hacks(self, app, info, options):
@@ -12,7 +12,7 @@ class UnLockedAlchemy(SQLAlchemy):
             options["isolation_level"] = "READ COMMITTED" 
         return super(UnLockedAlchemy, self).apply_driver_hacks(app, info, options)
 
-db = UnLockedAlchemy(app)
+db = UnLockedAlchemy(application)
 
 import tasks
 from models import *

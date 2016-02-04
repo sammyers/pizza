@@ -1,27 +1,29 @@
-from application import app, db
+#!/usr/bin/env python
+
+from app import db, application
 from flask import redirect, render_template, request, session, jsonify
 import requests, datetime, threading, decimal, math
-from application.models import Config, Half, Pizza, Person, Request
-from application.forms import OrderForm, AdminPanel, RequestForm
-from application.constants import CONSUMER_ID, CONSUMER_SECRET 
-from application.constants import VENMO_ADMIN, VENMO_NOTE
-from application.constants import LARGE_PRICE, MEDIUM_PRICE
-from application.constants import EMAIL_DOMAIN, ORDER_TIMES
-from application.tasks import close_order
-from application.helpers import ReadablePizza, set_price, add_pizzas, clear_tables
-from application.autoemail import order_confirmation, arrival_confirmation
+from app.models import Config, Half, Pizza, Person, Request
+from app.forms import OrderForm, AdminPanel, RequestForm
+from app.constants import CONSUMER_ID, CONSUMER_SECRET 
+from app.constants import VENMO_ADMIN, VENMO_NOTE
+from app.constants import LARGE_PRICE, MEDIUM_PRICE
+from app.constants import EMAIL_DOMAIN, ORDER_TIMES
+from app.tasks import close_order
+from app.helpers import ReadablePizza, set_price, add_pizzas, clear_tables
+from app.autoemail import order_confirmation, arrival_confirmation
 from celery.task.control import revoke
 from sqlalchemy.exc import IntegrityError
 
 
-@app.route("/")
+@application.route("/")
 def homepage():
 	session.clear()
 	data = db.session.query(Config).first()
 	return render_template('homepage.html', data=data)
 
 
-@app.route("/order", methods=['GET', 'POST'])
+@application.route("/order", methods=['GET', 'POST'])
 def order():
 	if request.method == 'GET':
 		session.clear()
@@ -79,7 +81,7 @@ def order():
 						   large_price=LARGE_PRICE, medium_price=MEDIUM_PRICE)
 
 
-@app.route("/request", methods=['GET','POST'])
+@application.route("/request", methods=['GET','POST'])
 def request_food():
 	form = RequestForm(request.form)
 	times = [time[0] for time in ORDER_TIMES]
@@ -102,7 +104,7 @@ def request_food():
 	return render_template('request.html', form=form, domain=EMAIL_DOMAIN, current=current)
 
 
-@app.route("/oauth-authorized")
+@application.route("/oauth-authorized")
 def oauth_authorized():
 	if request.args.get('error'):
 		db.session.rollback()
@@ -126,7 +128,7 @@ def oauth_authorized():
 	return redirect("/pay")
 
 
-@app.route("/pay")
+@application.route("/pay")
 def pay():
 	if session.get('venmo_token'):
 		config = db.session.query(Config).first()
@@ -145,7 +147,7 @@ def pay():
 		return redirect("/")
 
 
-@app.route("/make_payment", methods=['POST'])
+@application.route("/make_payment", methods=['POST'])
 def make_payment():
 	access_token = session['venmo_token']
 	note = VENMO_NOTE
@@ -172,7 +174,7 @@ def make_payment():
 	return jsonify(data)
 
 
-@app.route("/check_status", methods=['GET', 'POST'])
+@application.route("/check_status", methods=['GET', 'POST'])
 def check_status():
 	config = db.session.query(Config).first()
 	# if request.method == 'POST':
@@ -186,7 +188,7 @@ def check_status():
 	return jsonify(data)
 
 
-@app.route("/admin", methods=['GET','POST'])
+@application.route("/admin", methods=['GET','POST'])
 def admin():
 	session.clear()
 	data = db.session.query(Config).first()
@@ -267,8 +269,6 @@ def admin():
 
 	return render_template('admin.html', panel=panel, data=data)
 
-
-application = app
 
 if __name__ == "__main__":
 	application.run(host='0.0.0.0')

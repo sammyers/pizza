@@ -2,11 +2,11 @@ from factory import create_celery
 from celery.signals import task_prerun
 from flask import g
 from models import Config, Half, Pizza
-from __init__ import app, db
+from __init__ import application, db
 from helpers import add_pizzas
 import datetime
 
-celery = create_celery(app)
+celery = create_celery(application)
 
 @task_prerun.connect
 def celery_prerun(*args, **kwargs):
